@@ -10,7 +10,19 @@
 ;   none
 		EXPORT	_bzero
 _bzero
-		; implement your complete logic, including stack operations
+		; r0 = address of s
+		; r1 = # of bytes to zero-init
+		
+		STMDB sp!, {r0-r12, lr}		; save all registers
+		MOV r2, #0
+		
+bzero_lbegin	
+		SUBS r1, r1, #1
+		BMI bzero_lend
+		STRB r2, [r0], #0x1
+		B bzero_lbegin
+bzero_lend
+		LDMIA sp!, {r0-r12, lr}
 		MOV		pc, lr	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
