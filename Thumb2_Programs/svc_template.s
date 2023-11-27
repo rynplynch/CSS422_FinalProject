@@ -16,6 +16,28 @@ SYS_FREE		EQU		0x5		; address 20007B14
 		EXPORT	_syscall_table_init
 _syscall_table_init
 	;; Implement by yourself
+		; Import routines
+		IMPORT 	_kfree
+		IMPORT 	_kalloc
+		IMPORT 	_signal_handler
+		IMPORT 	_timer_start
+		
+		; Store entries
+		LDR		r0, =_kfree
+		LDR 	r1, =0x20007B14
+		STR 	r0, [r1]
+		
+		LDR 	r0, =_kalloc
+		LDR 	r1, =0x20007B10
+		STR 	r0, [r1]
+		
+		LDR 	r0, =_signal_handler
+		LDR 	r1, =0x20007B08
+		STR 	r0, [r1]
+		
+		LDR		r0, =_timer_start
+		LDR 	r1, =0x20007B04
+		STR 	r0, [r1]
 	
 		MOV		pc, lr
 
@@ -24,7 +46,40 @@ _syscall_table_init
         EXPORT	_syscall_table_jump
 _syscall_table_jump
 	;; Implement by yourself
+		STMDB sp!, {lr}		; save all registers		; Save lr before jumpinh
+	; Matches
+		CMP		r7, SYS_FREE
+		BEQ		kfree
+		CMP		r7, SYS_MALLOC
+		BEQ		malloc
+		CMP		r7, SYS_SIGNAL
+		BEQ		signal
+		CMP		r7, SYS_ALARM
+		BEQ		alarm
 	
+	; Actions
+kfree
+		LDR		r8, =0x20007B14
+		LDR		r9, [r8]
+		BLX		r9
+		B 		stop
+malloc
+		LDR		r8, =0x20007B10
+		LDR		r9, [r8]
+		BLX		r9
+		B 		stop
+signal
+		LDR		r8, =0x20007B08
+		LDR		r9, [r8]
+		BLX		r9
+		B 		stop
+alarm
+		LDR		r8, =0x20007B04
+		LDR		r9, [r8]
+		BLX		r9
+		B 		stop
+stop
+		LDMIA sp!, {lr}		; resume registers
 		MOV		pc, lr			
 		
 		END

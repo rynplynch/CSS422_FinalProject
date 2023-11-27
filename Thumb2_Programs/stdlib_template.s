@@ -22,20 +22,36 @@ bzero_lbegin
 		STRB r2, [r0], #0x1
 		B bzero_lbegin
 bzero_lend
+
 		LDMIA sp!, {r0-r12, lr}
 		MOV		pc, lr	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; char* _strncpy( char* dest, char* src, int size )
 ; Parameters
-;   	dest 	- pointer to the buffer to copy to
-;	src	- pointer to the zero-terminated string to copy from
+;   dest 	- pointer to the buffer to copy to
+;	src		- pointer to the zero-terminated string to copy from
 ;	size	- a total of n bytes
 ; Return value
 ;   dest
 		EXPORT	_strncpy
 _strncpy
-		; implement your complete logic, including stack operations
+		; r0 = dest
+		; r1 = src
+		; r2 = size
+		STMDB sp!, {r0-r12, lr}		; save all registers
+		
+strncpy_lbegin
+		SUBS r2, r2, #1
+		BMI strncpy_lend
+		LDRB r3, [r1], #0x1
+		STRB r3, [r0], #0x1
+		CMP r3, #0
+		BEQ strncpy_lend
+		B strncpy_lbegin
+strncpy_lend		
+
+		LDMIA sp!, {r0-r12, lr}
 		MOV		pc, lr
 		
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -47,9 +63,15 @@ _strncpy
 		EXPORT	_malloc
 _malloc
 		; save registers
+		STMDB sp!, {r0-r12, lr}		; save all registers
+		
+		; r0 = size
+		
 		; set the system call # to R7
+		MOV		r7, #0x4
 	        SVC     #0x0
 		; resume registers
+		LDMIA sp!, {r0-r12, lr}
 		MOV		pc, lr
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -62,6 +84,7 @@ _malloc
 _free
 		; save registers
 		; set the system call # to R7
+		MOV		r7, #0x5
         	SVC     #0x0
 		; resume registers
 		MOV		pc, lr
@@ -78,6 +101,7 @@ _free
 _alarm
 		; save registers
 		; set the system call # to R7
+		MOV		r7, #0x1
         	SVC     #0x0
 		; resume registers	
 		MOV		pc, lr		
@@ -94,6 +118,7 @@ _alarm
 _signal
 		; save registers
 		; set the system call # to R7
+		MOV		r7, #0x2
         	SVC     #0x0
 		; resume registers
 		MOV		pc, lr	
