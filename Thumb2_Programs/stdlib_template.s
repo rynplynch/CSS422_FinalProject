@@ -63,7 +63,7 @@ strncpy_lend
 		EXPORT	_malloc
 _malloc
 		; save registers
-		STMDB sp!, {r0-r12, lr}		; save all registers
+		STMDB sp!, {r1-r12, lr}		; save all registers
 		
 		; r0 = size
 		
@@ -71,7 +71,9 @@ _malloc
 		MOV		r7, #0x4
 	        SVC     #0x0
 		; resume registers
-		LDMIA sp!, {r0-r12, lr}
+		MOV		r0, r4
+		LDMIA sp!, {r1-r12, lr}
+
 		MOV		pc, lr
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

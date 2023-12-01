@@ -268,6 +268,7 @@ SVC_Handler     PROC
 				BL		_syscall_table_jump
 				
 				LDMIA sp!, {lr}		; Resume lr
+				
 				BX	lr 
                 ENDP
 DebugMon_Handler\

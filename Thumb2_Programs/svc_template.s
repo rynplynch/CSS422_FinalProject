@@ -46,7 +46,7 @@ _syscall_table_init
         EXPORT	_syscall_table_jump
 _syscall_table_jump
 	;; Implement by yourself
-		STMDB sp!, {lr}		; save all registers		; Save lr before jumpinh
+		STMDB sp!, {lr}		; Save lr before jumping
 	; Matches
 		CMP		r7, SYS_FREE
 		BEQ		kfree
