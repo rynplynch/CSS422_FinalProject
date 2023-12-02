@@ -24,19 +24,25 @@ USR_HANDLER     EQU		0x20007B84		; Address of a user-given signal handler functi
 _timer_init
 
 	;; the hex value to set the Interupt Enabled bit off and the Clock Enable off
-	MOV r0, =STCTRL_STOP
+	LDR r0, =STCTRL_STOP
+	;; load Status Register Address
+	LDR r1, =STCTRL
 	;; Store in the Control and Status Register
-	STR [=STCTRL], r0
+	STR r0, [r1]
 
 	;; value we count down from. This makes it so an Interupt is generated every 1 second
 	LDR r0, =STRELOAD_MX
+	;; load Reload Value Regsiter address
+	LDR r1, =STRELOAD
 	;; store it in the SYST_RVR register
-	STR [=STRELOAD], r0
+	STR r0, [r1]
 
 	;; we must always clear the Current Value Register on reset
+	;; load its address
 	LDR r0, =STCURR_CLR
+	MOV r1, #0x0
 	;; this also clears the counter and COUNTFLAG
-	STR [=STCURRENT], r0
+	STR r1, [r0]
 
 	MOV		pc, lr		; return to Reset_Handler
 
@@ -49,9 +55,9 @@ _timer_start
 	;; Set value of SYST_CSR (SysTick Control&Status Register)
 	LDR r0, =STCTRL
 	;; bit 1 (Enable Interupt) = 1, bit 0 (Enable Counter) = 1
-	;; TODO
+	LDR r1, = STCTRL_GO
 	;; store altered value
-	STR [=STCTRL], r0
+	STR r1, [r0]
 
 	;; return the current counter value???
 	LDR r0, =STCURRENT
@@ -65,9 +71,11 @@ _timer_start
 _timer_update
 	;; Grab the current value in the Current Value Register
 	;; It returns how much time remains on the timer
-	LDR r0, [=STCURRENT]
+	LDR r0, =STCURRENT
+	;; address of system variable seconds left
+	LDR r1, =SECOND_LEFT
 	;; update the system variable SECOND_LEFT
-	STR[=SECOND_LEFT], r0
+	STR r0, [r1]
 
 	MOV		pc, lr		; return to SysTick_Handler
 
