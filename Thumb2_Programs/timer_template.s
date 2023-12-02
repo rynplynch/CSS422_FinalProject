@@ -23,18 +23,15 @@ USR_HANDLER     EQU		0x20007B84		; Address of a user-given signal handler functi
 		EXPORT		_timer_init
 _timer_init
 
-	;; Set value of SYST_CSR (SysTick Control&Status Register)
-	LDR r0, =STCTRL
-	;; bit 2 (Select Clock Source) = 1, bit 1 (Enable Interupt) = 0, bit 0 (Enable Counter) = 0
-	;; TODO
-	;; store altered value
+	;; the hex value to set the Interupt Enabled bit off and the Clock Enable off
+	MOV r0, =STCTRL_STOP
+	;; Store in the Control and Status Register
 	STR [=STCTRL], r0
 
 	;; value we count down from
 	LDR r0, =STRELOAD_MX
 	;; store it in the SYST_RVR register
-	STR [STRELOAD], r0
-
+	STR [=STRELOAD], r0
 
 	MOV		pc, lr		; return to Reset_Handler
 
