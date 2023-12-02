@@ -61,9 +61,13 @@ _timer_start
 ; void timer_update( )
 		EXPORT		_timer_update
 _timer_update
-	;; Implement by yourself
-	
-		MOV		pc, lr		; return to SysTick_Handler
+	;; Grab the current value in the Current Value Register
+	;; It returns how much time remains on the timer
+	LDR r0, [=STCURRENT]
+	;; update the system variable SECOND_LEFT
+	STR[=SECOND_LEFT], r0
+
+	MOV		pc, lr		; return to SysTick_Handler
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Timer update
