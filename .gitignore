@@ -1,0 +1,11 @@
+.DS_Store
+.idea
+*.log
+tmp/
+*.axf.
+*.htm
+*.lnp
+*.map
+*.dep
+*.0
+*.d
