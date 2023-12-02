@@ -224,7 +224,7 @@ Reset_Handler   PROC
 				LDR		R0, =__initial_sp	; user mode
 				MSR     PSP, R0
 
-        ;; initial config for SysTick
+                ;; initial config for SysTick
                 IMPORT	_timer_init
                 LDR		r0, =_timer_init
                 BLX		r0
