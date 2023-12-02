@@ -23,29 +23,38 @@ USR_HANDLER     EQU		0x20007B84		; Address of a user-given signal handler functi
 		EXPORT		_timer_init
 _timer_init
 
-		;; Set value of SYST_CSR (SysTick Control&Status Register)
-		LDR r0, =STCTRL
-		;; bit 2 (Select Clock Source) = 1, bit 1 (Enable Interupt) = 0, bit 0 (Enable Counter) = 0
-		;; TODO
-		;; store altered value
-		STR [=STCTRL], r0
+	;; Set value of SYST_CSR (SysTick Control&Status Register)
+	LDR r0, =STCTRL
+	;; bit 2 (Select Clock Source) = 1, bit 1 (Enable Interupt) = 0, bit 0 (Enable Counter) = 0
+	;; TODO
+	;; store altered value
+	STR [=STCTRL], r0
 
-		;; value we count down from
-		LDR r0, =STRELOAD_MX
-		;; store it in the SYST_RVR register
-		STR [STRELOAD], r0
+	;; value we count down from
+	LDR r0, =STRELOAD_MX
+	;; store it in the SYST_RVR register
+	STR [STRELOAD], r0
 
 
-		MOV		pc, lr		; return to Reset_Handler
+	MOV		pc, lr		; return to Reset_Handler
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Timer start
 ; int timer_start( int seconds )
 		EXPORT		_timer_start
 _timer_start
-	;; Implement by yourself
-	
-		MOV		pc, lr		; return to SVC_Handler
+
+	;; Set value of SYST_CSR (SysTick Control&Status Register)
+	LDR r0, =STCTRL
+	;; bit 1 (Enable Interupt) = 1, bit 0 (Enable Counter) = 1
+	;; TODO
+	;; store altered value
+	STR [=STCTRL], r0
+
+	;; return the current counter value???
+	LDR r0, =STCURRENT
+
+	MOV		pc, lr		; return to SVC_Handler
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Timer update
