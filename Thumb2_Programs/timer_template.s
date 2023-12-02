@@ -28,10 +28,15 @@ _timer_init
 	;; Store in the Control and Status Register
 	STR [=STCTRL], r0
 
-	;; value we count down from
+	;; value we count down from. This makes it so an Interupt is generated every 1 second
 	LDR r0, =STRELOAD_MX
 	;; store it in the SYST_RVR register
 	STR [=STRELOAD], r0
+
+	;; we must always clear the Current Value Register on reset
+	LDR r0, =STCURR_CLR
+	;; this also clears the counter and COUNTFLAG
+	STR [=STCURRENT], r0
 
 	MOV		pc, lr		; return to Reset_Handler
 
