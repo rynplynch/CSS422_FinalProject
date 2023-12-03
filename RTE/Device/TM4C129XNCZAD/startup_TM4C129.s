@@ -220,10 +220,14 @@ Reset_Handler   PROC
 				IMPORT	_heap_init
 				LDR		r0, =_heap_init
 				BLX		r0
+                ;; initial config for SysTick
+                IMPORT	_timer_init
+                LDR		r0, =_timer_init
+                BLX		r0
 				
 				LDR		R0, =__initial_sp	; user mode
 				MSR     PSP, R0
-				
+
 				; Change CPU mode into unprivileged thread mode using PSP
 				MOVS	R0,	#3	; Set SPSEL bit 1, nPriv bit 0
 				MSR	CONTROL, R0	; Now thread mode uses PSP for user	
@@ -284,7 +288,12 @@ PendSV_Handler\
 SysTick_Handler\
                 PROC
                 EXPORT  SysTick_Handler           [WEAK]
-                B       .
+				STMDB sp!, {lr}		; Save lr
+				IMPORT 	_timer_update		; Syscall jump
+				BL		_timer_update
+				
+				LDMIA sp!, {lr}		; Resume lr
+				BX	lr
                 ENDP
 
 GPIOA_Handler\
@@ -400,6 +409,7 @@ WDT0_Handler\
                 EXPORT  WDT0_Handler [WEAK]
                 B       .
                 ENDP
+
 
 TIMER0A_Handler\
                 PROC
