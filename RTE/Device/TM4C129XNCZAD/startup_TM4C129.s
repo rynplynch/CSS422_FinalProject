@@ -204,6 +204,7 @@ __Vectors_Size  EQU     __Vectors_End - __Vectors
 Reset_Handler   PROC
                 EXPORT  Reset_Handler             [WEAK]
                 IMPORT  SystemInit
+                IMPORT	_timer_init
                 IMPORT  __main
 					
 				LDR		R0, =__initial_sp	; thread mode
@@ -221,7 +222,6 @@ Reset_Handler   PROC
 				LDR		r0, =_heap_init
 				BLX		r0
                 ;; initial config for SysTick
-                IMPORT	_timer_init
                 LDR		r0, =_timer_init
                 BLX		r0
 				
