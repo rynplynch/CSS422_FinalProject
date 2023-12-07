@@ -12,3 +12,4 @@ tmp/
 *.uvguix.*
 *.uvoptx
 *.o
+*.uvprojx
