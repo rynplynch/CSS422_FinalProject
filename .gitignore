@@ -2,7 +2,7 @@
 .idea
 *.log
 tmp/
-*.axf.
+*.axf
 *.htm
 *.lnp
 *.map
@@ -10,3 +10,5 @@ tmp/
 *.0
 *.d
 *.uvguix.*
+*.uvoptx
+*.o
