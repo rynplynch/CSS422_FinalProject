@@ -6,7 +6,7 @@
 HEAP_TOP	EQU		0x20001000
 HEAP_BOT	EQU		0x20004FE0
 MAX_SIZE	EQU		0x00004000		; 16KB = 2^14
-MIN_SIZE	EQU		0x00000020		; 32B  = 2^5
+MIN_SIZE	EQU		0x00000040		; 64B  = 2^6
 	
 MCB_TOP		EQU		0x20006800      	; 2^10B = 1K Space
 MCB_BOT		EQU		0x20006BFE
@@ -34,6 +34,30 @@ init_lbegin
 		B		init_lbegin
 init_lend
 		
+		MOV		pc, lr
+
+_MCBToHeap
+		; r0 = address of MCB
+		; r1 = base MCB addr
+		; r2 = base Heap addr
+		LDR 	r1, =MCB_TOP
+		LDR 	r2, =HEAP_TOP
+		
+		SUB 	r3, r0, r1
+		LSL 	r3, #4
+		ADD 	r0, r3, r2
+		MOV		pc, lr
+		
+_HeapToMCB
+		; r0 = address of Heap
+		; r1 = base MCB addr
+		; r2 = base Heap addr
+		LDR 	r1, =MCB_TOP
+		LDR 	r2, =HEAP_TOP
+		
+		SUB 	r3, r0, r2
+		ASR 	r3, #4
+		ADD 	r0, r3, r1
 		MOV		pc, lr
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -141,8 +165,18 @@ _ralloc_routine
 		
 		CMP		r6, r0	
 		BLT		base_case			; Base case, block size is smaller than data	
+		
+		LDR		r11, =MIN_SIZE
+		CMP		r6, r11				; Exception
+		BEQ		smallest
+		
+		CMP		r6, r0
 		BNE		not_found			; Placement not found
 		
+		BEQ 	size_found
+smallest
+		MOV		r0, r11				; Smallest size
+size_found
 		; Size found, check availability		
 		AND		r7, r3, #0x0001
 		CMP		r7, #0x0001
@@ -178,7 +212,13 @@ found
 		STR		r0, [r4]			; update buddy
 		ADD		r0, r0, #0x1
 		STR		r0, [r1]			; Store content in current block address
-		MOV		r4, r1				; Return address in r4 - r4 doesn't get resumed from SVC call
+		
+		MOV		r0, r1				; Call translation
+		MOV		r4, lr
+		BL		_MCBToHeap
+		MOV		lr, r4
+		
+		MOV		r4, r0				; Return address in r4 - r4 doesn't get resumed from SVC call
 ralloc_done
 		MOV		pc, lr
 
@@ -219,8 +259,14 @@ rfree_done
 ; void free( void *ptr )
 		EXPORT	_kfree
 _kfree
-		; r0 = address of target
+		; r0 = address of target heap address
 		; r1 = content of target addr
+		
+		; Translate to MCB address, r0 = MCB addr
+		MOV		r4, lr
+		BL		_HeapToMCB
+		MOV		lr, r4
+		
 		LDR		r1, [r0]			; Initially free target
 		LDR		r3, =0xFFF0
 		AND		r1,	r1, r3
@@ -237,3 +283,5 @@ _kfree
 		MOV		pc, lr				; return from rfree( )
 		
 		END
+
+
