@@ -287,11 +287,13 @@ PendSV_Handler\
 SysTick_Handler\
                 PROC
                 EXPORT  SysTick_Handler           [WEAK]
-				STMDB sp!, {lr}		; Save lr
+				;;STMDB sp!, {lr}		; Save lr
+				STR lr, [r8]
 				IMPORT 	_timer_update		; Syscall jump
 				BL		_timer_update
 				
-				LDMIA sp!, {lr}		; Resume lr
+				;;LDMIA sp!, {lr}		; Resume lr
+				LDR lr, [r8]
 				BX	lr
                 ENDP
 

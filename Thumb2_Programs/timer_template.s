@@ -9,8 +9,7 @@ STCURRENT	EQU		0xE000E018		; SysTick Current Value Register
 	
 STCTRL_STOP	EQU		0x00000004		; Bit 2 (CLK_SRC) = 1, Bit 1 (INT_EN) = 0, Bit 0 (ENABLE) = 0
 STCTRL_GO	EQU		0x00000007		; Bit 2 (CLK_SRC) = 1, Bit 1 (INT_EN) = 1, Bit 0 (ENABLE) = 1
-;;STRELOAD_MX	EQU		0x00FFFFFF		; MAX Value = 1/16MHz * 16M = 1 second
-STRELOAD_MX	EQU		0x0000002F		; MAX Value = 1/16MHz * 16M = 1 second
+STRELOAD_MX	EQU		0x00FFFFFF		; MAX Value = 1/16MHz * 16M = 1 second
 STCURR_CLR	EQU		0x00000000		; Clear STCURRENT and STCTRL.COUNT	
 SIGALRM		EQU		14			; sig alarm
 
@@ -87,24 +86,26 @@ _timer_update
 	STR r0, [r1]
 	;; check to see if 0 seconds are left
 	CMP r0, #0
+	;; if there are not 0 seconds left leave the clock on
 	BNE update_end
-	;; reset the clock
-	;; Set value of SYST_CSR (SysTick Control&Status Register)
-	LDR r0, =STCTRL
-	;; bit 1 (Enable Interupt) = 0, bit 0 (Enable Counter) = 0
-	LDR r1, = STCTRL_STOP
-	;;store stop value into SysTick Control Register
-	STR r1, [r0]
+	;; grab address of control register
+	LDR r1, =STCTRL
+	;; grab address of stop value
+	LDR r0, =STCTRL_STOP
+	;; Store stop value into control register
+	STR r0, [r1]
 	;; branch to user signal handler
 	LDR r0, =USR_HANDLER
 	LDR r0, [r0]
-	STMDB sp!, {lr}		; Save lr
+	MOV r7, lr
+	;;STMDB sp!, {lr}		; Save lr
 	BLX r0
-	LDMIA sp!, {lr}		; Resume lr
-
+	;;LDMIA sp!, {lr}		; Resume lr
+	MOV lr, r7
 
 update_end
-	MOV		pc, lr		; return to SysTick_Handler
+
+	MOV		pc, lr		; return to exception handle
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Timer update

@@ -3,7 +3,7 @@
  * Auto generated Run-Time-Environment Configuration File
  *      *** Do not modify ! ***
  *
- * Project: 'DylanMinhRyan_FinalProject' 
+ * Project: '422FinalProject' 
  * Target:  'Target 1' 
  */
 
