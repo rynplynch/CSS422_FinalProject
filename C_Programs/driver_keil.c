@@ -27,6 +27,7 @@ int main(void) {
 	_bzero( stringA, 40 );
 	*/
 	void* mem1 = _malloc( 1024 );
+	
 	void* mem2 = _malloc( 1024 );
 	void* mem3 = _malloc( 8192 );
 	void* mem4 = _malloc( 4096 );
@@ -50,12 +51,13 @@ int main(void) {
 		void* mem9 = _malloc( 4 );	
 		_free( mem9 );		
 	}
-	
+	/*
 	_signal( SIG_ALRM, sig_handler2 );
 	_alarm( 3 );
 	while ( *alarmed != 3 ) {
 		void* mem9 = _malloc( 4 );	
 		_free( mem9 );
 	}
+	*/
 	return 0;
 }

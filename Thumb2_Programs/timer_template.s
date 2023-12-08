@@ -9,7 +9,8 @@ STCURRENT	EQU		0xE000E018		; SysTick Current Value Register
 	
 STCTRL_STOP	EQU		0x00000004		; Bit 2 (CLK_SRC) = 1, Bit 1 (INT_EN) = 0, Bit 0 (ENABLE) = 0
 STCTRL_GO	EQU		0x00000007		; Bit 2 (CLK_SRC) = 1, Bit 1 (INT_EN) = 1, Bit 0 (ENABLE) = 1
-STRELOAD_MX	EQU		0x00FFFFFF		; MAX Value = 1/16MHz * 16M = 1 second
+;;STRELOAD_MX	EQU		0x00FFFFFF		; MAX Value = 1/16MHz * 16M = 1 second
+STRELOAD_MX	EQU		0x0000002F		; MAX Value = 1/16MHz * 16M = 1 second
 STCURR_CLR	EQU		0x00000000		; Clear STCURRENT and STCTRL.COUNT	
 SIGALRM		EQU		14			; sig alarm
 

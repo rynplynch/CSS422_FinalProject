@@ -42,18 +42,19 @@ init_lend
 		EXPORT	_kalloc
 _kalloc
 	; r0 = size
-		STMDB sp!, {r1-r12, lr}		; save all registers
+		STMDB sp!, {lr}		; save all registers
 		LDR		r1, =MCB_TOP
 		LDR		r2, =MCB_BOT
 		BL		_ralloc				; Call helper function
 		
-		LDMIA sp!, {r0-r12, lr}		; resume registers
+		LDMIA sp!, {lr}		; resume registers
 		MOV		pc, lr
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Recursive Helper function for _ralloc
 ; finds the appropriate tree to iterate over
 ; Returns address of appropriate tree spot
+; Handles special case of combining buddies if needed
 ; int* _rfind( int size, int* left, int* right)
 _rfind
 	; r0 = size
@@ -76,6 +77,35 @@ rsize_found
 		BNE		r_done
 rnot_found
 		ASR		r4, r4, #4			; Get next buddy or upper layer, this is the formula
+		ADD		r10, r1, r4
+		; Check if this block + buddy can combine to fit
+		LDR		r5, =0x0001			; Check availability
+		AND		r6, r3, r5			
+		CMP		r6, r5
+		BEQ		iterate
+		
+		; Check if this block + buddy can combine to fit
+		LDR		r7, [r10]			; Contents of buddy
+		LDR		r5, =0x0001			; Check availability
+		AND		r6, r7, r5			
+		CMP		r6, r5
+		BEQ		iterate
+		
+		ADD		r8, r3, r7			; Sum of contents
+		CMP		r8, r0
+		BNE		iterate
+		
+		; Found
+		LDR		r9, =0x0			; Zero-init buddy
+		STR		r9, [r10]
+		STR		r8,	[r1]			; Update left with combination of contents
+		
+		ASR		r12, r0, #4			; Update right
+		ADD		r2, r1, r12			
+		SUB		r2, r2, #0x2
+		
+		B		r_done
+iterate
 		ADD		r1, r1, r4			; Update left
 		LDR		r5, =0x20006C00		; Check if out of bounds
 		CMP		r1, r5					
@@ -89,7 +119,6 @@ r_done
 ; Recursive Helper function for kalloc
 ; Places appropriate address in MCB
 ; void _ralloc( int size, int* left, int* right)
-		EXPORT	_ralloc
 _ralloc
 	; r0 = size
 	; r1 = left
@@ -99,9 +128,9 @@ _ralloc
 	; r4 = address of buddy once block halved
 	; r5 = right + 2 bytes
 	; r6 = current block size
-		MOV r10, lr					; Save lr before jumping
+		MOV r11, lr					; Save lr before jumping
 		BL		_rfind
-		MOV lr, r10					; resume registers
+		MOV lr, r11					; resume registers
 		
 _ralloc_routine		
 		LDR		r3, [r1]			; Get info for current block
@@ -131,6 +160,8 @@ not_found
 		AND		r7, r4, #0x0001		; right
 		CMP		r7, #0x0001
 		BNE		right
+		
+		B		base_case			; no availability
 
 left
 		SUB		r2, r4, #0x2		; new right
@@ -142,21 +173,67 @@ right
 		B		_ralloc
 base_case		
 		LDR		r0, =0x0000			; Return value is 0x0000 if none found
-		B ralloc_done
+		B 		ralloc_done
 found
 		STR		r0, [r4]			; update buddy
 		ADD		r0, r0, #0x1
 		STR		r0, [r1]			; Store content in current block address
+		MOV		r4, r1				; Return address in r4 - r4 doesn't get resumed from SVC call
 ralloc_done
 		MOV		pc, lr
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Kernel Memory De-allocation
+; Recursively updates MCB
+; void _rfree( int* target, int* ogAddr )
+_rfree
+		; r0 = current MCB address
+		; r1 = current MCB content
+		; r2 = original MCB address
+		LDR		r1, [r0]			
+		
+		AND		r3, r1, #0x0001		; Base case: Block is in use or empty	
+		CMP		r3, #0x0001
+		BEQ		rfree_done
+		CMP		r1, #0x0
+		BEQ		rfree_done
+		
+		; Empty block - remove block and loop
+		LDR		r3,	[r2]			; Update orginal MCB entry
+		ADD		r3,	r3, r1
+		STR		r3, [r2]
+		
+		LDR		r3, =0x0			; Zero-init
+		STR		r3,	[r0]
+		
+		ASR		r4, r1, #4			; Get next buddy or upper layer, this is the formula 
+		ADD		r0, r0, r4
+
+		B		_rfree
+rfree_done
+		MOV		pc, lr
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Kernel Memory De-allocation
 ; void free( void *ptr )
 		EXPORT	_kfree
 _kfree
-	;; Implement by yourself
-		MOV		pc, lr					; return from rfree( )
+		; r0 = address of target
+		; r1 = content of target addr
+		LDR		r1, [r0]			; Initially free target
+		LDR		r3, =0xFFF0
+		AND		r1,	r1, r3
+		STR		r1, [r0]	
+		
+		ASR		r3, r1, #4			; Get next buddy or upper layer, this is the formula
+		MOV		r2, r0				; Save og address
+		ADD		r0, r0, r3			; Get prior to entering recursion
+		
+		MOV		r10, lr
+		BL		_rfree				; Recursively traverse buddies
+		MOV		lr, r10
+		
+		MOV		pc, lr				; return from rfree( )
 		
 		END
