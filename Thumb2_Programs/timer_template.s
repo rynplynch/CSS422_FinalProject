@@ -10,6 +10,7 @@ STCURRENT	EQU		0xE000E018		; SysTick Current Value Register
 STCTRL_STOP	EQU		0x00000004		; Bit 2 (CLK_SRC) = 1, Bit 1 (INT_EN) = 0, Bit 0 (ENABLE) = 0
 STCTRL_GO	EQU		0x00000007		; Bit 2 (CLK_SRC) = 1, Bit 1 (INT_EN) = 1, Bit 0 (ENABLE) = 1
 STRELOAD_MX	EQU		0x00FFFFFF		; MAX Value = 1/16MHz * 16M = 1 second
+;;STRELOAD_MX	EQU		0x0000002F		; MAX Value = 1/16MHz * 16M = 1 second
 STCURR_CLR	EQU		0x00000000		; Clear STCURRENT and STCTRL.COUNT	
 SIGALRM		EQU		14			; sig alarm
 
@@ -39,7 +40,7 @@ _timer_init
 
 	;; we must always clear the Current Value Register on reset
 	;; load its address
-	LDR r0, =STCURR_CLR
+	LDR r0, =STCURRENT
 	MOV r1, #0x0
 	;; this also clears the counter and COUNTFLAG
 	STR r1, [r0]
@@ -86,14 +87,22 @@ _timer_update
 	STR r0, [r1]
 	;; check to see if 0 seconds are left
 	CMP r0, #0
-	;; if there are not 0 seconds left leave the clock on
-	BNE update_end
 	;; grab address of control register
 	LDR r1, =STCTRL
+	;; read from the control register to reset count flag
+	LDR r0, [r1]
+	;; if there are not 0 seconds left leave the clock on
+	BNE update_end
 	;; grab address of stop value
 	LDR r0, =STCTRL_STOP
 	;; Store stop value into control register
 	STR r0, [r1]
+	;; reset the current count register
+	;; load current count register address
+	LDR r0, =STCURRENT
+	;; store 0 into it
+	MOV r1, #0x0
+	STR r1, [r0]
 	;; branch to user signal handler
 	LDR r0, =USR_HANDLER
 	LDR r0, [r0]
@@ -104,7 +113,6 @@ _timer_update
 	MOV lr, r7
 
 update_end
-
 	MOV		pc, lr		; return to exception handle
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -120,7 +128,11 @@ _signal_handler
 	LDR r0, =USR_HANDLER
 	;; r1 is stored in the systems variable USR_HANDLER
 	STR r1, [r0]
-	
-		MOV		pc, lr		; return to Reset_Handler
+
+	;; return the previous value of USR_HANDLER
+	MOV r0, r1
+
+	;; return to main
+	MOV	pc, lr
 		
-		END		
+	END
