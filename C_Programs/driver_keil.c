@@ -8,18 +8,17 @@ extern unsigned int _alarm( unsigned int );
 
 #define SIG_ALRM 14
 
-int* alarmed;
+int alarmed;
 
 void sig_handler1( int signum ) {
-	*alarmed = 2;
+	alarmed = 2;
 }
 
 void sig_handler2( int signum ) {
-	*alarmed = 3;
+	alarmed = 3;
 }
 
 int main(void) {
-	/*
 	char stringA[40] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabc\0";
 	char stringB[40];
 	_bzero( stringB, 40 );
@@ -43,29 +42,18 @@ int main(void) {
 	_free( mem4 );
 	_free( mem3 );
 	_free( mem8 );
-	*/
-	alarmed = (int *)_malloc( 4 );
-	*alarmed = 1;
+
+	alarmed = 1;
 	_signal( SIG_ALRM, sig_handler1 );
 	_alarm( 2 );
-	char stringA[40] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabc\0";
-	char stringB[40];
-	while ( *alarmed != 2 ) {
-		_bzero( stringB, 40 );
-		_strncpy( stringB, stringA, 40 );
-
+	while ( alarmed != 2 ) {
+		void* mem9 = _malloc( 4 );	
+		_free( mem9 );
 	}
 	
 	_signal( SIG_ALRM, sig_handler2 );
 	_alarm( 3 );
-	while ( *alarmed != 3 ) {
-		void* mem9 = _malloc( 4 );	
-		_free( mem9 );
-	}
-
-	_signal( SIG_ALRM, sig_handler2 );
-	_alarm( 3 );
-	while ( *alarmed != 3 ) {
+	while ( alarmed != 3 ) {
 		void* mem9 = _malloc( 4 );	
 		_free( mem9 );
 	}
