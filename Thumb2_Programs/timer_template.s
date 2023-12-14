@@ -125,12 +125,13 @@ _signal_handler
 	;; Implement by yourself
 	;; r0 is not needed here because it is always 14
 	;; we overwrite it with address of system variable USR_HANDLER
-	LDR r0, =USR_HANDLER
+	LDR r3, =USR_HANDLER
+	LDR r4, [r3]
 	;; r1 is stored in the systems variable USR_HANDLER
-	STR r1, [r0]
+	STR r1, [r3]
 
 	;; return the previous value of USR_HANDLER
-	MOV r0, r1
+	MOV r0, r4
 
 	;; return to main
 	MOV	pc, lr
